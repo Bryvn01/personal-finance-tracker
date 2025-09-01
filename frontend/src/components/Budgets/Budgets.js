@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { budgetsAPI, categoriesAPI } from '../../services/api';
 import { t } from '../../utils/i18n';
 import { useAuth } from '../../context/AuthContext';
@@ -13,13 +13,6 @@ const Budgets = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
-  // Authorization check
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-  }, [user, navigate]);
   const [formData, setFormData] = useState({
     category_id: '',
     amount: '',
@@ -27,19 +20,27 @@ const Budgets = () => {
     year: new Date().getFullYear()
   });
 
+  // Authorization check
   useEffect(() => {
-    fetchBudgets();
-    fetchCategories();
-  }, [currentMonth, currentYear]);
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+  }, [user, navigate]);
 
-  const fetchBudgets = async () => {
+  const fetchBudgets = useCallback(async () => {
     try {
       const response = await budgetsAPI.getAll(currentMonth, currentYear);
       setBudgets(response.data);
     } catch (error) {
       console.error('Error fetching budgets:', error);
     }
-  };
+  }, [currentMonth, currentYear]);
+
+  useEffect(() => {
+    fetchBudgets();
+    fetchCategories();
+  }, [currentMonth, currentYear, fetchBudgets]);
 
   const fetchCategories = async () => {
     try {

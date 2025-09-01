@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement } from 'chart.js';
 import { Pie, Bar, Line } from 'react-chartjs-2';
 import { transactionsAPI } from '../../services/api';
@@ -23,21 +23,16 @@ const Analytics = () => {
     }
   }, [user, navigate]);
 
-  useEffect(() => {
-    fetchAnalytics();
-    fetchMonthlyTrends();
-  }, [selectedMonth, selectedYear]);
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
       const response = await transactionsAPI.getAnalytics(selectedMonth, selectedYear);
       setAnalyticsData(response.data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
     }
-  };
+  }, [selectedMonth, selectedYear]);
 
-  const fetchMonthlyTrends = async () => {
+  const fetchMonthlyTrends = useCallback(async () => {
     try {
       const months = [];
       for (let i = 0; i < 6; i++) {
@@ -54,7 +49,12 @@ const Analytics = () => {
     } catch (error) {
       console.error('Error fetching monthly trends:', error);
     }
-  };
+  }, [selectedMonth, selectedYear]);
+
+  useEffect(() => {
+    fetchAnalytics();
+    fetchMonthlyTrends();
+  }, [selectedMonth, selectedYear, fetchAnalytics, fetchMonthlyTrends]);
 
   // Prepare data for expense pie chart
   const expenseData = analyticsData.filter(item => item.type === 'expense');
